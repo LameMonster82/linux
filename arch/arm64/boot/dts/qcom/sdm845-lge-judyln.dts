@@ -15,6 +15,7 @@
 
 	chosen {
 		framebuffer@9d400000 {
+			status = "disabled";
 			reg = <0x0 0x9d400000 0x0 (1440 * 3120 * 4)>;
 			height = <3120>;
 			lab-supply = <&lab>;
@@ -52,13 +53,128 @@
 	};
 };
 
+&dsi0 {
+	status = "okay";
+	vdda-supply = <&vdda_mipi_dsi0_1p2>;
+	clock-master;
+
+	ports {
+		mipi_dsi0_out: port@1 {
+			dsi0_out_panel: endpoint {
+				remote-endpoint = <&lg_sw49410_in_0>;
+			};
+		};
+	};
+
+	display_panel: panel@0 {
+		status = "okay";
+		compatible = "lg,sw49410-rev1";
+		reg = <0>;
+		vddio-supply = <&vreg_s4a_1p8>;
+		vsp-supply = <&lab>;
+		vsn-supply = <&ibb>;
+
+		reset-gpios = <&tlmm 6 GPIO_ACTIVE_HIGH>;
+
+		pinctrl-names = "panel_active", "panel_suspend";
+		pinctrl-0 = <&sde_dsi_active &sde_te_active &extra_ldo_panel_power_active>;
+		pinctrl-1 = <&sde_dsi_suspend &sde_te_suspend &extra_ldo_panel_power_suspend>;
+
+		ports {
+			port@0 {
+				lg_sw49410_in_0: endpoint@0 {
+					remote-endpoint = <&dsi0_out_panel>;
+				};
+			};
+
+			/*
+			port@1 {
+				lg_sw49410_in_1: endpoint@1 {
+					remote-endpoint = <&dsi1_out_panel>;
+				};
+			};
+			*/
+		};
+	};
+};
+/*
+&dsi1 {
+	status = "okay";
+
+	ports {
+		mipi_dsi1_out: port@1 {
+			dsi1_out_panel: endpoint {
+				remote-endpoint = <&lg_sw49410_in_1>;
+			};
+		};
+	};
+};
+*/
+&dsi0_phy {
+	status = "okay";
+	vdds-supply = <&vdda_mipi_dsi0_pll>;
+	data-lanes = <0 1 2 3>;
+};
+/*
+&dsi1_phy {
+	status = "okay";
+	vdds-supply = <&vdda_mipi_dsi1_pll>;
+	data-lanes = <0 1 2 3>;
+};
+*/
+&mdss {
+	status = "okay";
+};
+
+&mdss_mdp {
+	status = "okay";
+};
+
+&lab {
+	regulator-always-on;
+};
+
 &cdsp_pas {
 	firmware-name = "qcom/sdm845/judyln/cdsp.mbn";
 };
 
 &gpu {
+	status = "okay";
+
+	/* GDSC oxili regulators */
+	vddcx-supply = <&gpu_cx_gdsc>;
+	vdd-supply = <&gpu_gx_gdsc>;
+
 	zap-shader {
+		memory-region = <&gpu_mem>;
 		firmware-name = "qcom/sdm845/judyln/a630_zap.mbn";
+	};
+};
+
+&soc {
+	/* GDSCs in Graphics CC */
+	gpu_cx_hw_ctrl: syscon@0x5091540 {
+		compatible = "syscon";
+		reg = <0x5091540 0x4>;
+	};
+
+	gpu_cx_gdsc: qcom,gdsc@0x509106c {
+		compatible = "qcom,gdsc";
+		regulator-name = "gpu_cx_gdsc";
+		reg = <0x509106c 0x4>;
+		hw-ctrl-addr = <&gpu_cx_hw_ctrl>;
+		qcom,no-status-check-on-disable;
+		qcom,gds-timeout = <500>;
+		qcom,clk-dis-wait-val = <8>;
+		status = "okay";
+	};
+
+	gpu_gx_gdsc: qcom,gdsc@0x509100c {
+		compatible = "qcom,gdsc";
+		regulator-name = "gpu_gx_gdsc";
+		reg = <0x509100c 0x4>;
+		qcom,poll-cfg-gdscr;
+		status = "okay";
 	};
 };
 
@@ -68,6 +184,10 @@
 
 &sdhc_2 {
 	cd-gpios = <&tlmm 126 GPIO_ACTIVE_LOW>; 
+};
+
+&dispcc {
+  status = "okay";
 };
 
 &tlmm {
