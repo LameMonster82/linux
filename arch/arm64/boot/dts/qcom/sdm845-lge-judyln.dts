@@ -15,7 +15,7 @@
 
 	chosen {
 		framebuffer@9d400000 {
-			status = "okay";
+			status = "disabled";
 			reg = <0x0 0x9d400000 0x0 (1440 * 3120 * 4)>;
 			height = <3120>;
 			lab-supply = <&lab>;
