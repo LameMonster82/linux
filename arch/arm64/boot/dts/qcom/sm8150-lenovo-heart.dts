@@ -1,0 +1,139 @@
+// SPDX-License-Identifier: BSD-3-Clause
+/*
+ * Devicetree for the OnePlus 7 Pro. This device uses a samsung touch driver
+ * and has a 1440p panel but is otherwise similar to the rest of the series.
+ *
+ * Copyright (c) 2021, Caleb Connolly <caleb@connolly.tech>
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+#include <dt-bindings/gpio/gpio.h>
+#include "sm8150-lenovo-common.dtsi"
+
+/ {
+	model = "Lenovo Z5 Pro GT";
+	compatible = "lenovo,heart", "qcom,sm8150";
+
+	aliases {
+		display0 = &framebuffer0;
+	};
+
+	chosen {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+		stdout-path = "display0";
+
+		/*
+		 * hack: Use framebuffer setup by the bootloader for simplefb.
+		 * the address is taken from the bootloader config (strings xbl.img | grep "Display Reserved")
+		 */
+		framebuffer0: framebuffer@9C000000 {
+			compatible = "simple-framebuffer";
+			reg = <0 0x9C000000 0 (1080 * 2340 * 4)>;
+			width = <1080>;
+			height = <2340>;
+			stride = <(1080 * 4)>;
+			format = "a8r8g8b8";
+			status = "okay";
+
+		};
+	};
+
+	reserved-memory {
+	// hack: Bootloader framebuffer memory region
+		fb_mem: memory@a1a10000 {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0 0x9C000000 0 (1080 * 2340 * 4)>;
+		};
+	};
+};
+
+/*
+&gpu {
+	zap-shader {
+		memory-region = <&gpu_mem>;
+		firmware-name = "qcom/a640_zap.mdt";
+	};
+};
+
+&dsi0 {
+	status = "okay";
+	vdda-supply = <&vdda_mipi_dsi0_1p2>;
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	display_panel: panel@0 {
+		compatible = "lenovo,smd639-amoled";
+		status = "okay";
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0>;
+
+		vddio-supply = <&vreg_l14a_1p88>;
+
+		reset-gpios = <&tlmm 6 GPIO_ACTIVE_LOW>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&panel_reset_pins &panel_te_pin &panel_esd_pin>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&dsi0_out>;
+			};
+		};
+	};
+};
+
+&dsi0_out {
+	remote-endpoint = <&panel_in>;
+	data-lanes = <0 1 2 3>;
+};
+
+&dsi0_phy {
+	status = "okay";
+	vdds-supply = <&vdda_mipi_dsi0_pll>;
+};
+
+&tlmm {
+	panel_reset_pins: panel-reset {
+		mux {
+			pins = "gpio6", "gpio78", "gpio130";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-disable = <0>;
+		};
+	};
+
+	panel_te_pin: panel-te {
+		mux {
+			pins = "gpio8";
+			function = "mdp_vsync";
+			drive-strength = <2>;
+			bias-disable;
+			input-enable;
+		};
+	};
+
+	panel_esd_pin: panel-esd {
+		mux {
+			pins = "gpio30";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-pull-down;
+			input-enable;
+		};
+	};
+};
+*/
+
+&remoteproc_mpss {
+	status = "okay";
+	firmware-name = "qcom/sm8150/heart/modem.mdt";
+};
+
